@@ -1,0 +1,50 @@
+---
+
+Documentação do Programa de Análise de Ações
+
+Descrição
+
+Este programa permite que os usuários realizem análises financeiras de ações com base em diversos indicadores, como PVP-PA, P/L, Dividend Yield, Valor Intrínseco e RSI. Os usuários podem interagir através de um menu e escolher a análise desejada.
+
+Funcionalidades
+
+1. Calcular PVP-PA: Analisa o preço em relação ao valor patrimonial da ação.
+
+
+2. Calcular P/L: Avalia o preço da ação em relação ao lucro por ação (LPA).
+
+
+3. Calcular Dividend Yield: Calcula o rendimento de dividendos em relação ao preço da ação.
+
+
+4. Calcular Valor Intrínseco: Determina o valor intrínseco da ação com base em dividendos esperados, taxa de desconto e taxa de crescimento.
+
+
+5. Calcular RSI: Avalia se a ação está sobrecomprada ou sobrevendida com base nos ganhos e perdas.
+
+
+6. Sair: Encerra o programa.
+
+
+7. Fechar Programa: Encerra o programa imediatamente.
+
+
+
+Uso
+
+O usuário deve escolher uma opção do menu digitando o número correspondente.
+
+O programa solicitará as informações necessárias para realizar o cálculo.
+
+Os resultados das análises serão exibidos na tela.
+
+
+Considerações
+
+Certifique-se de inserir valores numéricos válidos.
+
+O programa foi desenvolvido em Python e utiliza funções para modularizar as análises.
+
+
+
+---
