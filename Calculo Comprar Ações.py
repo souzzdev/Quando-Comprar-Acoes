@@ -1,65 +1,53 @@
 def calcular_pvpa(preco_acao, valor_patrimonial):
-    # Calcula o PVP-PA (Preço sobre Valor Patrimonial)
     pvpa = preco_acao / valor_patrimonial
     if pvpa < 1:
-        return f"PVP-PA: {pvpa:.2f}. A ação está subvalorizada, pode ser um bom momento para comprar."
+        return pvpa, f"PVP-PA: {pvpa:.2f}. A ação está subvalorizada, pode ser um bom momento para comprar."
     elif pvpa == 1:
-        return f"PVP-PA: {pvpa:.2f}. A ação está com preço justo."
+        return pvpa, f"PVP-PA: {pvpa:.2f}. A ação está com preço justo."
     else:
-        return f"PVP-PA: {pvpa:.2f}. A ação está supervalorizada."
-
-def calcular_pl(preco_acao, lpa):
-    # Calcula o P/L (Preço sobre Lucro)
-    pl = preco_acao / lpa
-    if pl < 10:
-        return f"P/L: {pl:.2f}. A ação está barata."
-    elif 10 <= pl <= 20:
-        return f"P/L: {pl:.2f}. A ação está com preço justo."
-    else:
-        return f"P/L: {pl:.2f}. A ação está cara."
+        return pvpa, f"PVP-PA: {pvpa:.2f}. A ação está supervalorizada."
 
 def calcular_dy(dividendos_anuais, preco_acao):
-    # Calcula o Dividend Yield (Rendimento de Dividendos)
     dy = (dividendos_anuais / preco_acao) * 100
     if dy > 5:
-        return f"Dividend Yield: {dy:.2f}%. A ação tem um bom rendimento em dividendos."
+        return dy, f"Dividend Yield: {dy:.2f}%. A ação tem um bom rendimento em dividendos."
     else:
-        return f"Dividend Yield: {dy:.2f}%. O rendimento em dividendos é baixo."
+        return dy, f"Dividend Yield: {dy:.2f}%. O rendimento em dividendos é baixo."
 
-def calcular_valor_intrinseco(dividendo_esperado, taxa_desconto, taxa_crescimento):
-    # Calcula o Valor Intrínseco da ação
-    if taxa_desconto <= taxa_crescimento:
-        return "A taxa de desconto deve ser maior que a taxa de crescimento."
-    valor_intrinseco = dividendo_esperado / (taxa_desconto - taxa_crescimento)
-    return f"Valor intrínseco da ação: {valor_intrinseco:.2f}"
+def comparar_acoes(acao1, acao2):
+    print("\n--- Comparação de Valor Atual e Valor Patrimonial por Cota ---")
+    print(f"Ação 1 - Valor Atual: {acao1['preco_acao']}, Valor Patrimonial por Cota: {acao1['valor_patrimonial']}")
+    print(f"Ação 2 - Valor Atual: {acao2['preco_acao']}, Valor Patrimonial por Cota: {acao2['valor_patrimonial']}")
 
-def calcular_rsi(ganhos, perdas):
-    # Calcula o RSI (Índice de Força Relativa)
-    if perdas == 0:
-        return "RSI: 100. A ação está sobrecomprada."
-    rs = ganhos / perdas
-    rsi = 100 - (100 / (1 + rs))
-    if rsi > 70:
-        return f"RSI: {rsi:.2f}. A ação está sobrecomprada. Pode ser um bom momento para vender."
-    elif rsi < 30:
-        return f"RSI: {rsi:.2f}. A ação está sobrevendida. Pode ser um bom momento para comprar."
+    print("\n--- Comparação de P/VPA ---")
+    pvpa1, msg_pvpa1 = calcular_pvpa(acao1['preco_acao'], acao1['valor_patrimonial'])
+    pvpa2, msg_pvpa2 = calcular_pvpa(acao2['preco_acao'], acao2['valor_patrimonial'])
+    print(f"Ação 1 - {msg_pvpa1}")
+    print(f"Ação 2 - {msg_pvpa2}")
+
+    print("\n--- Comparação de Dividend Yield ---")
+    dy1, msg_dy1 = calcular_dy(acao1['dividendos_anuais'], acao1['preco_acao'])
+    dy2, msg_dy2 = calcular_dy(acao2['dividendos_anuais'], acao2['preco_acao'])
+    print(f"Ação 1 - {msg_dy1}")
+    print(f"Ação 2 - {msg_dy2}")
+
+    print("\n--- Recomendação Final ---")
+    if pvpa1 < pvpa2 and dy1 > dy2:
+        print("Ação 1 é a melhor escolha para compra com base em P/VPA e Dividend Yield.")
+    elif pvpa2 < pvpa1 and dy2 > dy1:
+        print("Ação 2 é a melhor escolha para compra com base em P/VPA e Dividend Yield.")
+    elif pvpa1 < pvpa2:
+        print("Ação 1 é a melhor escolha com base em P/VPA.")
+    elif pvpa2 < pvpa1:
+        print("Ação 2 é a melhor escolha com base em P/VPA.")
+    elif dy1 > dy2:
+        print("Ação 1 é a melhor escolha com base em Dividend Yield.")
+    elif dy2 > dy1:
+        print("Ação 2 é a melhor escolha com base em Dividend Yield.")
     else:
-        return f"RSI: {rsi:.2f}. A ação está em zona neutra."
-
-def mostrar_ajuda():
-    # Explica cada opção do menu
-    print("\n--- Ajuda para as opções ---")
-    print("1. Calcular PVP-PA: Analisa se a ação está subvalorizada ou supervalorizada.")
-    print("2. Calcular P/L: Verifica se a ação está barata, com preço justo ou cara.")
-    print("3. Calcular Dividend Yield: Informa o rendimento em dividendos da ação.")
-    print("4. Calcular Valor Intrínseco: Determina o valor real da ação com base em dividendos esperados.")
-    print("5. Calcular RSI: Indica se a ação está sobrecomprada, sobrevendida ou em zona neutra.")
-    print("6. Sair: Encerra o programa.")
-    print("7. Fechar Programa: Fecha imediatamente o programa.")
-    print("8. Saber o que cada opção faz: Mostra a descrição de cada cálculo disponível.")
+        print("Ambas as ações têm características similares; pode ser interessante analisar outros fatores.")
 
 def menu():
-    # Exibe o menu e processa a seleção do usuário
     while True:
         print("\n--- Menu de Análise de Ações ---")
         print("1. Calcular PVP-PA")
@@ -69,7 +57,8 @@ def menu():
         print("5. Calcular RSI")
         print("6. Sair")
         print("7. Fechar Programa")
-        print("8. Saber o que cada opção faz")  # Opção para exibir ajuda
+        print("8. Saber o que cada opção faz")
+        print("9. Comparar duas ações")
         opcao = input("Escolha uma opção: ")
 
         if opcao == "1":
@@ -107,7 +96,20 @@ def menu():
             exit()
 
         elif opcao == "8":
-            mostrar_ajuda()  # Chama a função para exibir ajuda
+            mostrar_ajuda()
+
+        elif opcao == "9":
+            acao1 = {
+                'preco_acao': float(input("Ação 1 - Digite o preço atual da ação: ")),
+                'valor_patrimonial': float(input("Ação 1 - Digite o valor patrimonial por cota: ")),
+                'dividendos_anuais': float(input("Ação 1 - Digite os dividendos anuais por ação: "))
+            }
+            acao2 = {
+                'preco_acao': float(input("Ação 2 - Digite o preço atual da ação: ")),
+                'valor_patrimonial': float(input("Ação 2 - Digite o valor patrimonial por cota: ")),
+                'dividendos_anuais': float(input("Ação 2 - Digite os dividendos anuais por ação: "))
+            }
+            comparar_acoes(acao1, acao2)
 
         else:
             print("Opção inválida. Tente novamente.")
