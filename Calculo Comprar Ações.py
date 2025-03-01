@@ -1,222 +1,169 @@
-import random
-import time
-from colorama import Fore
+import csv
+from datetime import datetime
+from colorama import Fore, Style, init
+import sys
 
-class CalculadoraInvestimentos:
-    # Métodos para cálculos
-    def calcular_pvpa(self, preco_acao, valor_patrimonial):
-        try:
-            pvpa = preco_acao / valor_patrimonial
-            if pvpa < 1:
-                return pvpa, f"P/VPA: {pvpa:.2f}. A ação está subvalorizada, pode ser um bom momento para comprar."
-            elif pvpa == 1:
-                return pvpa, f"P/VPA: {pvpa:.2f}. A ação está com preço justo."
-            else:
-                return pvpa, f"P/VPA: {pvpa:.2f}. A ação está supervalorizada."
-        except ZeroDivisionError:
-            return None, Fore.RED + "Erro: O valor patrimonial não pode ser zero."
+# Inicializa a colorama para melhorar a legibilidade no terminal
+init(autoreset=True)
 
-    def calcular_dy(self, dividendos_anuais, preco_acao):
-        try:
-            dy = (dividendos_anuais / preco_acao) * 100
-            if dy > 5:
-                return dy, f"Dividend Yield: {dy:.2f}%. A ação tem um bom rendimento em dividendos."
-            else:
-                return dy, f"Dividend Yield: {dy:.2f}%. O rendimento em dividendos é baixo."
-        except ZeroDivisionError:
-            return None, Fore.RED + "Erro: O preço da ação não pode ser zero."
-    
-    def calcular_pl(self, preco_acao, lpa):
-        try:
-            pl = preco_acao / lpa
-            if pl < 10:
-                return pl, f"P/L: {pl:.2f}. A ação está barata em relação ao lucro."
-            elif pl == 10:
-                return pl, f"P/L: {pl:.2f}. A ação está com preço justo em relação ao lucro."
-            else:
-                return pl, f"P/L: {pl:.2f}. A ação está cara em relação ao lucro."
-        except ZeroDivisionError:
-            return None, Fore.RED + "Erro: O LPA não pode ser zero."
+class AnaliseAcao:
+    """Classe para representar as análises feitas sobre as ações."""
+    def __init__(self, salvar_csv=True):
+        self.resultados = []
+        self.salvar_csv = salvar_csv  # Define se deve ou não salvar no CSV
 
-    def calcular_valor_intrinseco(self, dividendo_esperado, taxa_desconto, taxa_crescimento):
-        try:
-            valor_intrinseco = dividendo_esperado * (1 + taxa_crescimento) / (taxa_desconto - taxa_crescimento)
-            return valor_intrinseco, f"Valor Intrínseco: {valor_intrinseco:.2f}"
-        except ZeroDivisionError:
-            return None, Fore.RED + "Erro: A taxa de desconto não pode ser igual à taxa de crescimento."
+    def adicionar_resultado(self, dados):
+        """Adiciona um novo resultado à lista de resultados e salva no CSV, se necessário."""
+        self.resultados.append(dados)
+        if self.salvar_csv:
+            self.salvar_dados_csv(dados)
 
-    def calcular_rsi(self, ganhos, perdas):
+    def salvar_dados_csv(self, dados):
+        """Salva os dados da análise em um arquivo CSV."""
         try:
-            rs = ganhos / perdas
-            rsi = 100 - (100 / (1 + rs))
-            if rsi > 70:
-                return rsi, f"RSI: {rsi:.2f}. A ação está sobrecomprada, atenção com a queda."
-            elif rsi < 30:
-                return rsi, f"RSI: {rsi:.2f}. A ação está sobrevendida, pode ser uma oportunidade de compra."
-            else:
-                return rsi, f"RSI: {rsi:.2f}. A ação está em uma faixa neutra."
-        except ZeroDivisionError:
-            return None, Fore.RED + "Erro: Não é possível calcular o RSI sem perdas."
-
-    def calcular_pvp(self, preco_cota, valor_patrimonial_cota):
-        try:
-            pvp = preco_cota / valor_patrimonial_cota
-            if pvp < 1:
-                return pvp, f"P/VP: {pvp:.2f}. O FII está subvalorizado, pode ser interessante analisar para compra."
-            elif pvp == 1:
-                return pvp, f"P/VP: {pvp:.2f}. O FII está com preço justo."
-            else:
-                return pvp, f"P/VP: {pvp:.2f}. O FII está supervalorizado, cuidado com o preço."
-        except ZeroDivisionError:
-            return None, Fore.RED + "Erro: O valor patrimonial da cota não pode ser zero."
-
-    def calcular_dy_fii(self, rendimento_mensal, preco_cota):
-        try:
-            if preco_cota == 0:
-                return None, Fore.RED + "Erro: O preço da cota não pode ser zero."
-            # Garantir que o cálculo do DY seja preciso
-            dy = (rendimento_mensal * 12 / preco_cota) * 100
-            if dy > 6:
-                return dy, Fore.GREEN + f"Dividend Yield: {dy:.2f}%. O FII tem um bom rendimento."
-            else:
-                return dy, Fore.RED + f"Dividend Yield: {dy:.2f}%. O rendimento é baixo para um FII."
+            with open('resultados_analise.csv', mode='a', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerow(dados)
         except Exception as e:
-            return None, Fore.RED + f"Erro: {str(e)}"
+            print(Fore.RED + f"Erro ao salvar no CSV: {e}" + Style.RESET_ALL)
 
-class ChatbotInvestimentos:
-    def __init__(self):
-        self.calculadora = CalculadoraInvestimentos()
-        print(Fore.CYAN + "Bem-vindo ao Chatbot de Investimentos!")
-        print(Fore.CYAN + "Estou aqui para ajudá-lo a analisar ações e FIIs. Vamos começar!\n")
-    
-    def menu(self):
-        while True:
-            print(Fore.CYAN + "\nEscolha uma das opções abaixo:")
-            print(Fore.GREEN + "1. Calcular P/VPA de uma Ação")
-            print(Fore.GREEN + "2. Calcular Dividend Yield de uma Ação")
-            print(Fore.GREEN + "3. Calcular P/L de uma Ação")
-            print(Fore.GREEN + "4. Calcular Valor Intrínseco de uma Ação")
-            print(Fore.GREEN + "5. Calcular RSI de uma Ação")
-            print(Fore.GREEN + "6. Calcular P/VP de um FII")
-            print(Fore.GREEN + "7. Calcular Dividend Yield de um FII")
-            print(Fore.GREEN + "8. Analisar FII")
-            print(Fore.GREEN + "9. Comparar Ações")
-            print(Fore.RED + "0. Sair")
-            escolha = input(Fore.YELLOW + "Escolha a opção: ")
+    def mostrar_resultados(self):
+        """Exibe todos os resultados armazenados."""
+        if not self.resultados:
+            print(Fore.YELLOW + "Não há resultados para exibir." + Style.RESET_ALL)
+        else:
+            print(Fore.CYAN + "\n--- Histórico de Análises ---" + Style.RESET_ALL)
+            for resultado in self.resultados:
+                print(f"{Fore.GREEN}{resultado[0]} | {resultado[1]} | {resultado[2]}{Style.RESET_ALL}")
 
-            if escolha == "1":
-                self.calcular_pvpa()
-            elif escolha == "2":
-                self.calcular_dy()
-            elif escolha == "3":
-                self.calcular_pl()
-            elif escolha == "4":
-                self.calcular_valor_intrinseco()
-            elif escolha == "5":
-                self.calcular_rsi()
-            elif escolha == "6":
-                self.calcular_pvp()
-            elif escolha == "7":
-                self.calcular_dy_fii()
-            elif escolha == "8":
-                self.analisar_fii()
-            elif escolha == "9":
-                self.comparar_acoes()
-            elif escolha == "0":
-                print(Fore.CYAN + "Até logo!")
-                break
-            else:
-                print(Fore.RED + "Opção inválida, tente novamente.")
 
-    def calcular_pvpa(self):
+def calcular_pvpa(preco_acao, valor_patrimonial):
+    """Calcula o PVP-PA (Preço sobre Valor Patrimonial)."""
+    if valor_patrimonial <= 0:
+        return Fore.RED + "Erro: O valor patrimonial deve ser maior que zero."
+    pvpa = preco_acao / valor_patrimonial
+    status = "subvalorizada" if pvpa < 1 else "com preço justo" if pvpa == 1 else "supervalorizada"
+    return f"{Fore.GREEN}📊 PVP-PA: {pvpa:.2f} → A ação está {status}."
+
+
+def calcular_pl(preco_acao, lpa):
+    """Calcula o P/L (Preço sobre Lucro)."""
+    if lpa <= 0:
+        return Fore.RED + "Erro: O LPA deve ser maior que zero."
+    pl = preco_acao / lpa
+    status = "barata" if pl < 10 else "com preço justo" if pl <= 20 else "cara"
+    return f"{Fore.GREEN}📈 P/L: {pl:.2f} → A ação está {status}."
+
+
+def calcular_dy(dividendos_anuais, preco_acao):
+    """Calcula o Dividend Yield (Rendimento de Dividendos)."""
+    if preco_acao <= 0:
+        return Fore.RED + "Erro: O preço da ação deve ser maior que zero."
+    dy = (dividendos_anuais / preco_acao) * 100
+    status = "um bom rendimento" if dy > 5 else "um rendimento baixo"
+    return f"{Fore.GREEN}💰 Dividend Yield: {dy:.2f}% → A ação tem {status}."
+
+
+def calcular_valor_intrinseco(dividendo_esperado, taxa_desconto, taxa_crescimento):
+    """Calcula o Valor Intrínseco da ação."""
+    if taxa_desconto <= taxa_crescimento:
+        return Fore.RED + "Erro: A taxa de desconto deve ser maior que a taxa de crescimento."
+    valor_intrinseco = dividendo_esperado / (taxa_desconto - taxa_crescimento)
+    return f"{Fore.GREEN}💎 Valor Intrínseco: R$ {valor_intrinseco:.2f}"
+
+
+def calcular_rsi(ganhos, perdas):
+    """Calcula o RSI (Índice de Força Relativa)."""
+    if perdas == 0:
+        return f"{Fore.GREEN}📊 RSI: 100 → A ação está sobrecomprada."
+    rs = ganhos / perdas
+    rsi = 100 - (100 / (1 + rs))
+    status = "sobrecomprada" if rsi > 70 else "sobrevendida" if rsi < 30 else "em zona neutra"
+    return f"{Fore.GREEN}📊 RSI: {rsi:.2f} → A ação está {status}."
+
+
+def obter_float(mensagem):
+    """Lê e valida entradas numéricas do usuário."""
+    while True:
         try:
-            preco_acao = float(input("Informe o preço da ação: "))
-            valor_patrimonial = float(input("Informe o valor patrimonial da ação: "))
-            pvpa, mensagem = self.calculadora.calcular_pvpa(preco_acao, valor_patrimonial)
-            print(mensagem)
+            return float(input(Fore.YELLOW + mensagem + Style.RESET_ALL).replace(",", "."))
         except ValueError:
-            print(Fore.RED + "Por favor, insira valores numéricos válidos.")
+            print(Fore.RED + "❌ Erro: Digite um número válido." + Style.RESET_ALL)
 
-    def calcular_dy(self):
-        try:
-            dividendos_anuais = float(input("Informe os dividendos anuais da ação: "))
-            preco_acao = float(input("Informe o preço da ação: "))
-            dy, mensagem = self.calculadora.calcular_dy(dividendos_anuais, preco_acao)
-            print(mensagem)
-        except ValueError:
-            print(Fore.RED + "Por favor, insira valores numéricos válidos.")
 
-    def calcular_pl(self):
-        try:
-            preco_acao = float(input("Informe o preço da ação: "))
-            lpa = float(input("Informe o LPA (Lucro por Ação): "))
-            pl, mensagem = self.calculadora.calcular_pl(preco_acao, lpa)
-            print(mensagem)
-        except ValueError:
-            print(Fore.RED + "Por favor, insira valores numéricos válidos.")
+def perguntar_salvar_resultado():
+    """Pergunta ao usuário se deseja salvar o resultado no CSV."""
+    while True:
+        resposta = input(Fore.YELLOW + "Deseja salvar o resultado no arquivo CSV? (s/n): " + Style.RESET_ALL).strip().lower()
+        if resposta in ['s', 'n']:
+            return resposta == 's'
+        print(Fore.RED + "❌ Resposta inválida. Digite 's' para sim ou 'n' para não." + Style.RESET_ALL)
 
-    def calcular_valor_intrinseco(self):
-        try:
-            dividendo_esperado = float(input("Informe o dividendo esperado: "))
-            taxa_desconto = float(input("Informe a taxa de desconto: "))
-            taxa_crescimento = float(input("Informe a taxa de crescimento: "))
-            valor_intrinseco, mensagem = self.calculadora.calcular_valor_intrinseco(dividendo_esperado, taxa_desconto, taxa_crescimento)
-            print(mensagem)
-        except ValueError:
-            print(Fore.RED + "Por favor, insira valores numéricos válidos.")
 
-    def calcular_rsi(self):
-        try:
-            ganhos = float(input("Informe os ganhos: "))
-            perdas = float(input("Informe as perdas: "))
-            rsi, mensagem = self.calculadora.calcular_rsi(ganhos, perdas)
-            print(mensagem)
-        except ValueError:
-            print(Fore.RED + "Por favor, insira valores numéricos válidos.")
+def mostrar_ajuda():
+    """Exibe explicações sobre cada opção do menu."""
+    print(Fore.CYAN + "\n--- 📖 Ajuda para as opções ---" + Style.RESET_ALL)
+    print("1. Calcular PVP-PA: Analisa se a ação está subvalorizada ou supervalorizada.")
+    print("2. Calcular P/L: Verifica se a ação está barata, com preço justo ou cara.")
+    print("3. Calcular Dividend Yield: Informa o rendimento em dividendos da ação.")
+    print("4. Calcular Valor Intrínseco: Determina o valor real da ação com base em dividendos esperados.")
+    print("5. Calcular RSI: Indica se a ação está sobrecomprada, sobrevendida ou em zona neutra.")
+    print("6. Sair: Encerra o programa.")
+    print("7. Fechar Programa: Fecha imediatamente o programa.")
+    print("8. Saber o que cada opção faz: Mostra a descrição de cada cálculo disponível.")
 
-    def calcular_pvp(self):
-        try:
-            preco_cota = float(input("Informe o preço da cota do FII: "))
-            valor_patrimonial_cota = float(input("Informe o valor patrimonial da cota do FII: "))
-            pvp, mensagem = self.calculadora.calcular_pvp(preco_cota, valor_patrimonial_cota)
-            print(mensagem)
-        except ValueError:
-            print(Fore.RED + "Por favor, insira valores numéricos válidos.")
 
-    def calcular_dy_fii(self):
-        try:
-            rendimento_mensal = float(input("Informe o rendimento mensal do FII: "))
-            preco_cota = float(input("Informe o preço da cota do FII: "))
-            dy_fii, mensagem = self.calculadora.calcular_dy_fii(rendimento_mensal, preco_cota)
-            print(mensagem)
-        except ValueError:
-            print(Fore.RED + "Por favor, insira valores numéricos válidos.")
+def menu():
+    """Interface do menu interativo."""
+    salvar_csv = True  # Por padrão, salvará no CSV
+    analise = AnaliseAcao(salvar_csv)  # Instancia a classe para gerenciar resultados
 
-    def analisar_fii(self):
-        try:
-            preco_cota = float(input("Informe o preço da cota do FII: "))
-            valor_patrimonial_cota = float(input("Informe o valor patrimonial da cota do FII: "))
-            rendimento_mensal = float(input("Informe o rendimento mensal do FII: "))
-            self.calculadora.analisar_fii(preco_cota, valor_patrimonial_cota, rendimento_mensal)
-        except ValueError:
-            print(Fore.RED + "Por favor, insira valores numéricos válidos.")
+    opcoes = {
+        "1": ("Calcular PVP-PA", lambda: calcular_pvpa(
+            obter_float("Digite o preço da ação: "), obter_float("Digite o valor patrimonial da ação: "))),
+        "2": ("Calcular P/L", lambda: calcular_pl(
+            obter_float("Digite o preço da ação: "), obter_float("Digite o lucro por ação (LPA): "))),
+        "3": ("Calcular Dividend Yield", lambda: calcular_dy(
+            obter_float("Digite os dividendos anuais por ação: "), obter_float("Digite o preço da ação: "))),
+        "4": ("Calcular Valor Intrínseco", lambda: calcular_valor_intrinseco(
+            obter_float("Digite o dividendo esperado: "), obter_float("Digite a taxa de desconto (ex: 0.10 para 10%): "),
+            obter_float("Digite a taxa de crescimento (ex: 0.02 para 2%): "))),
+        "5": ("Calcular RSI", lambda: calcular_rsi(
+            obter_float("Digite os ganhos médios: "), obter_float("Digite as perdas médias: "))),
+        "6": ("Sair", lambda: sys.exit(Fore.RED + "🔚 Saindo do programa...")),
+        "7": ("Fechar Programa", lambda: sys.exit(Fore.RED + "❌ Fechando imediatamente.")),
+        "8": ("Saber o que cada opção faz", mostrar_ajuda),
+        "9": ("Ver Histórico de Análises", lambda: analise.mostrar_resultados())
+    }
 
-    def comparar_acoes(self):
-        try:
-            acao1 = {
-                "preco_acao": float(input("Informe o preço da ação 1: ")),
-                "valor_patrimonial": float(input("Informe o valor patrimonial da ação 1: ")),
-                "dividendos_anuais": float(input("Informe os dividendos anuais da ação 1: ")),
-            }
-            acao2 = {
-                "preco_acao": float(input("Informe o preço da ação 2: ")),
-                "valor_patrimonial": float(input("Informe o valor patrimonial da ação 2: ")),
-                "dividendos_anuais": float(input("Informe os dividendos anuais da ação 2: ")),
-            }
-            self.calculadora.comparar_acoes(acao1, acao2)
-        except ValueError:
-            print(Fore.RED + "Por favor, insira valores numéricos válidos.")
+    while True:
+        print(Fore.CYAN + "\n--- 📊 Menu de Análise de Ações ---" + Style.RESET_ALL)
+        for chave, (descricao, _) in opcoes.items():
+            print(f"{chave}. {descricao}")
 
-# Inicializar o chatbot
-chatbot = ChatbotInvestimentos()
-chatbot.menu()
+        escolha = input(Fore.YELLOW + "Escolha uma opção: " + Style.RESET_ALL)
+
+        if escolha in opcoes:
+            resultado = opcoes[escolha][1]()
+            if resultado:
+                print(resultado)
+                # Pergunta ao usuário se deseja salvar o resultado
+                if perguntar_salvar_resultado():
+                    analise.adicionar_resultado([datetime.now().strftime('%Y-%m-%d %H:%M:%S'), opcoes[escolha][0], resultado])
+        else:
+            print(Fore.RED + "❌ Opção inválida. Tente novamente." + Style.RESET_ALL)
+
+
+# ======================== EXECUÇÃO ========================
+
+if __name__ == "__main__":
+    # Verifica se o arquivo CSV existe, caso contrário cria o cabeçalho
+    try:
+        with open('resultados_analise.csv', mode='r'):
+            pass
+    except FileNotFoundError:
+        with open('resultados_analise.csv', mode='w', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(["Data", "Opção", "Resultado"])
+
+    menu()
