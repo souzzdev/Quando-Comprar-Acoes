@@ -80,3 +80,9 @@ Formato:
 
 Data,Opção,Resultado
 2025-06-27 10:42:03,Calcular P/L,📈 P/L: 9.45 → A ação está barata.
+`````
+<h2>👨‍💻 Autor</h2>
+<p><a href="https://www.linkedin.com/in/guilhermesouzadev">Guilherme Souza 💼</a></p>
+
+
+
